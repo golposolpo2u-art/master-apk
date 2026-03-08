@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>চ্যানেল পোর্টাল</title>
+    
+    <link href="https://fonts.maateen.me/kalpurush/font.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #333;
+            --secondary-color: #555;
+            --light-bg: #f9f9f9;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kalpurush', Arial, sans-serif; }
+        
+        body { background: var(--light-bg); color: var(--text-dark); min-height: 100vh; padding: 20px 10px; }
+
+        .container { max-width: 800px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; }
+
+        /* Header */
+        .header { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; text-align: center; }
+        .ch-logo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid var(--primary-color); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .ch-title { font-size: 28px; color: var(--primary-color); font-weight: bold; }
+        .btn-home { position: absolute; top: 20px; left: 20px; background: #eee; padding: 8px 15px; border-radius: 10px; text-decoration: none; color: #333; font-weight: bold; font-size: 14px; }
+
+        /* Login Screen */
+        #loginScreen { text-align: center; padding: 40px 0; }
+        .pass-input { width: 100%; max-width: 300px; padding: 15px; border: 2px solid #ccc; border-radius: 10px; font-size: 18px; text-align: center; margin-bottom: 20px; outline: none; }
+        .pass-input:focus { border-color: var(--primary-color); }
+        .btn-main { background: var(--primary-color); color: white; border: none; padding: 15px 30px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; max-width: 300px; }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        /* Dashboards */
+        .dashboard { display: none; }
+        .role-badge { display: inline-block; background: var(--primary-color); color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 20px; }
+        
+        .section-title { font-size: 18px; color: var(--primary-color); border-bottom: 2px solid #eee; padding-bottom: 10px; margin: 25px 0 15px; font-weight: bold; }
+
+        /* Form Elements */
+        label { font-weight: bold; color: #555; display: block; margin: 15px 0 5px; font-size: 14px; }
+        input[type="text"], select, textarea, input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; background: #fdfdfd; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary-color); }
+        textarea { min-height: 120px; resize: vertical; }
+
+        /* Folders & Cards */
+        .folder-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-top: 15px; }
+        .folder-card { background: #fff5f5; border: 1px solid var(--primary-color); padding: 20px 10px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .folder-card:hover { background: var(--primary-color); color: white; }
+        .folder-icon { font-size: 30px; margin-bottom: 10px; color: var(--primary-color); }
+        .folder-card:hover .folder-icon { color: white; }
+        .folder-name { font-weight: bold; font-size: 14px; }
+
+        .list-card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .list-card b { color: var(--primary-color); font-size: 18px; }
+        .list-card p { color: #666; font-size: 14px; margin-top: 5px; }
+
+        /* Modal */
+        #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
+        .modal-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .close-btn { float: right; background: #ff4d4d; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+        
+        #uploadStatus { text-align: center; font-weight: bold; color: var(--primary-color); margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="modalOverlay">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal()">X</button>
+        <h3 id="modalTitle" style="color:var(--primary-color); margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;"></h3>
+        <div id="modalContent"></div>
+    </div>
+</div>
+
+<div class="container">
+    <a href="index.html" class="btn-home"><i class="fas fa-arrow-left"></i> হোম</a>
+    
+    <div class="header">
+        <img id="chLogo" src="" class="ch-logo" style="display:none;">
+        <h1 id="chTitle" class="ch-title">লোড হচ্ছে...</h1>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen">
+        <p style="margin-bottom: 20px; color:#666;">এই পোর্টালটি একটি সুরক্ষিত জোন। প্রবেশ করতে অ্যাক্সেস কোড দিন।</p>
+        <input type="password" id="passInput" class="pass-input" placeholder="অ্যাক্সেস কোড লিখুন">
+        <br>
+        <button class="btn-main" onclick="checkAccess()">প্রবেশ করুন <i class="fas fa-sign-in-alt"></i></button>
+        <p id="loginError" style="color:red; margin-top:10px; display:none; font-weight:bold;">ভুল কোড! আবার চেষ্টা করুন।</p>
+    </div>
+
+    <!-- USER DASHBOARD -->
+    <div id="userDashboard" class="dashboard">
+        <div style="text-align:center;"><span class="role-badge">👤 মেম্বার প্যানেল</span></div>
+        
+        <h2 class="section-title"><i class="fas fa-tasks"></i> প্রজেক্টে কাজ জমা দিন</h2>
+        <div style="background: #fdfbf7; padding: 20px; border-radius: 12px; border: 1px solid #eee;">
+            <label>চলমান প্রজেক্ট সিলেক্ট করুন:</label>
+            <select id="uProjectSelect"><option value="">প্রজেক্ট লোড হচ্ছে...</option></select>
+            
+            <label>কাজের ধরন (ফোল্ডার):</label>
+            <select id="uCategory">
+                <option value="Voice">🎙️ ভয়েস (Voice)</option>
+                <option value="Scripting">✍️ স্ক্রিপ্টিং (Scripting)</option>
+                <option value="Editing">✂️ এডিটিং (Editing)</option>
+                <option value="Casting">🎭 কাস্টিং (Casting)</option>
+                <option value="Other">📁 অন্যান্য (Other)</option>
+            </select>
+            
+            <label>আপনার নাম:</label>
+            <input type="text" id="uName" placeholder="আপনার নাম লিখুন">
+            
+            <label>ফাইল আপলোড করুন (অডিও/ডক/ছবি):</label>
+            <input type="file" id="uFile">
+            
+            <button class="btn-main" style="margin-top:20px; width:100%;" onclick="submitProjectTask()">কাজ জমা দিন <i class="fas fa-upload"></i></button>
+            <div id="taskUploadStatus" style="text-align:center; margin-top:10px; font-weight:bold; color:green;"></div>
+        </div>
+
+        <h2 class="section-title" style="margin-top:40px;"><i class="fas fa-book"></i> নতুন গল্প জমা দিন (রাইটার্স জোন)</h2>
+        <div style="background: #f7fbff; padding: 20px; border-radius: 12px; border: 1px solid #eee;">
+            <label>লেখকের নাম:</label>
+            <input type="text" id="sAuthor" placeholder="আপনার নাম">
+            <label>গল্পের নাম:</label>
+            <input type="text" id="sTitle" placeholder="শিরোনাম">
+            <label>গল্প লিখুন বা কপি-পেস্ট করুন:</label>
+            <textarea id="sText" placeholder="এখানে গল্প লিখুন..."></textarea>
+            <button class="btn-main" style="margin-top:20px; width:100%;" onclick="submitStory()">গল্প পাঠান <i class="fas fa-paper-plane"></i></button>
+            <div id="storyUploadStatus" style="text-align:center; margin-top:10px; font-weight:bold; color:green;"></div>
+        </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="adminDashboard" class="dashboard">
+        <div style="text-align:center;"><span class="role-badge" style="background:#c62828;">👑 অ্যাডমিন প্যানেল</span></div>
+        
+        <!-- Create Project -->
+        <h2 class="section-title"><i class="fas fa-folder-plus"></i> নতুন প্রজেক্ট তৈরি করুন</h2>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="newProjectName" placeholder="যেমন: বিরাজ বৌ" style="flex:1; margin:0;">
+            <button class="btn-main" style="width:auto; padding:10px 20px;" onclick="createProject()">তৈরি করুন</button>
+        </div>
+
+        <!-- View Projects & Folders -->
+        <h2 class="section-title" style="margin-top:40px;"><i class="fas fa-folder-open"></i> প্রজেক্ট ফাইল ও ফোল্ডার</h2>
+        <label>প্রজেক্ট সিলেক্ট করুন:</label>
+        <select id="aProjectSelect" onchange="loadAdminFolders()"><option value="">প্রজেক্ট লোড হচ্ছে...</option></select>
+        
+        <div id="adminFolderContainer" class="folder-grid" style="display:none;">
+            <!-- Folders render here -->
+        </div>
+
+        <!-- View Stories -->
+        <h2 class="section-title" style="margin-top:40px;"><i class="fas fa-book-reader"></i> জমা পড়া নতুন গল্পসমূহ</h2>
+        <button class="btn-main" style="width:100%; background:var(--secondary-color);" onclick="loadAdminStories()">গল্পের লিস্ট রিফ্রেশ করুন</button>
+        <div id="adminStoriesList" style="margin-top:20px;"></div>
+    </div>
+
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+<script>
+    /* CHANNEL LOGIC & ISOLATION SYSTEM */
+    const urlParams = new URLSearchParams(window.location.search);
+    const chParam = urlParams.get('ch'); // 'prem' or 'panch'
+    
+    let currentChannel = "";
+    let userRole = ""; // 'USER' or 'ADMIN'
+
+    // CHANNEL CONFIGURATIONS AND PASSWORDS
+    const CHANNELS = {
+        "prem": {
+            name: "প্রেম কুটির",
+            logo: "https://i.ibb.co/hJdb514B/Logo.png",
+            color: "#e91e63",
+            userCode: "PKUSER",
+            adminCode: "PKADMIN"
+        },
+        "panch": {
+            name: "পাঁচকাহন",
+            logo: "https://i.ibb.co/r2KNWgBv/Logo.png",
+            color: "#f57f17",
+            userCode: "PCUSER",
+            adminCode: "PCADMIN"
+        }
+    };
+
+    const CLOUD_NAME = 'dy9bujsit'; 
+    const UPLOAD_PRESET = 'Prothom Kotha Voice';
+
+    const activeConfig = CHANNELS[chParam];
+
+    if(!activeConfig) {
+        document.getElementById('chTitle').innerText = "ভুল লিংক!";
+    } else {
+        currentChannel = activeConfig.name;
+        document.documentElement.style.setProperty('--primary-color', activeConfig.color);
+        document.getElementById('chTitle').innerText = currentChannel;
+        document.getElementById('chLogo').src = activeConfig.logo;
+        document.getElementById('chLogo').style.display = "block";
+    }
+
+    // Firebase Init
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+        apiKey: "AIzaSyCjrGdZMocegvJBIXKI5UKAfzFK7k3-iKI", projectId: "prothomkotha-2002"
+    };
+    const appId = typeof __app_id !== 'undefined' ? __app_id : "golposolpo-premium";
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const dbBase = db.collection('artifacts').doc(appId).collection('public').doc('data');
+
+    let allTasksCache = [];
+    let isAuthReady = false;
+
+    window.onload = async () => {
+        try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await auth.signInWithCustomToken(__initial_auth_token);
+            else await auth.signInAnonymously();
+        } catch(e) {}
+    };
+
+    auth.onAuthStateChanged(user => {
+        if(user) {
+            isAuthReady = true;
+            // Only start listeners if user has logged in to the dashboard
+            if(userRole) {
+                startDashboardListeners();
+            }
+        }
+    });
+
+    function checkAccess() {
+        if(!activeConfig) return;
+        const pass = document.getElementById('passInput').value;
+        const err = document.getElementById('loginError');
+        
+        if(pass === activeConfig.userCode) {
+            userRole = "USER";
+            startPortal();
+        } else if (pass === activeConfig.adminCode) {
+            userRole = "ADMIN";
+            startPortal();
+        } else {
+            err.style.display = "block";
+        }
+    }
+
+    function startPortal() {
+        document.getElementById('loginScreen').style.display = "none";
+        if(userRole === "USER") {
+            document.getElementById('userDashboard').style.display = "block";
+            if(isAuthReady) loadProjectsForDropdown('uProjectSelect');
+        } else {
+            document.getElementById('adminDashboard').style.display = "block";
+            if(isAuthReady) {
+                loadProjectsForDropdown('aProjectSelect');
+                startTasksListener();
+            }
+        }
+    }
+
+    function startDashboardListeners() {
+        if(userRole === "USER") {
+            loadProjectsForDropdown('uProjectSelect');
+        } else if (userRole === "ADMIN") {
+            loadProjectsForDropdown('aProjectSelect');
+            startTasksListener();
+        }
+    }
+
+    // Load projects specific to this channel
+    function loadProjectsForDropdown(selectId) {
+        if(!isAuthReady) return;
+        dbBase.collection('projects').onSnapshot(snap => {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="" disabled selected>প্রজেক্ট সিলেক্ট করুন</option>';
+            snap.forEach(doc => {
+                const d = doc.data();
+                if(d.channel === currentChannel) {
+                    select.innerHTML += `<option value="${doc.id}">${d.name}</option>`;
+                }
+            });
+        }, err => console.error(err));
+    }
+
+    // ADMIN: Load all tasks for caching
+    function startTasksListener() {
+        if(!isAuthReady) return;
+        dbBase.collection('tasks').onSnapshot(snap => {
+            allTasksCache = [];
+            snap.forEach(doc => allTasksCache.push({id: doc.id, ...doc.data()}));
+        }, err => console.error(err));
+    }
+
+
+    // ADMIN: Create Project
+    async function createProject() {
+        if(!isAuthReady) return;
+        const name = document.getElementById('newProjectName').value.trim();
+        if(!name) return alert("প্রজেক্টের নাম দিন!");
+        try {
+            await dbBase.collection('projects').add({
+                name: name,
+                channel: currentChannel,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            document.getElementById('newProjectName').value = "";
+            alert("প্রজেক্ট তৈরি হয়েছে!");
+        } catch(e) { alert("ত্রুটি!"); }
+    }
+
+    // USER: Submit Task to Folder
+    async function submitProjectTask() {
+        if(!isAuthReady) return;
+        const pId = document.getElementById('uProjectSelect').value;
+        const cat = document.getElementById('uCategory').value;
+        const name = document.getElementById('uName').value.trim();
+        const fileObj = document.getElementById('uFile').files[0];
+        const status = document.getElementById('taskUploadStatus');
+
+        if(!pId || !name || !fileObj) return alert("সব তথ্য এবং ফাইল দিন!");
+
+        status.innerText = "⏳ ফাইল আপলোড হচ্ছে...";
+        
+        const fd = new FormData();
+        fd.append('file', fileObj);
+        fd.append('upload_preset', UPLOAD_PRESET);
+        
+        try {
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: 'POST', body: fd });
+            const data = await res.json();
+            if(data.secure_url) {
+                status.innerText = "⏳ ডাটাবেসে সেভ হচ্ছে...";
+                await dbBase.collection('tasks').add({
+                    channel: currentChannel,
+                    projectId: pId,
+                    folder: cat,
+                    submitterName: name,
+                    fileUrl: data.secure_url,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                status.innerText = "✅ কাজ সফলভাবে জমা হয়েছে!";
+                document.getElementById('uName').value = "";
+                document.getElementById('uFile').value = "";
+                setTimeout(()=> status.innerText="", 3000);
+            } else throw new Error("Upload failed");
+        } catch(e) { status.innerText = "❌ আপলোড ব্যর্থ হয়েছে!"; status.style.color="red";}
+    }
+
+    // USER: Submit Story
+    async function submitStory() {
+        if(!isAuthReady) return;
+        const author = document.getElementById('sAuthor').value.trim();
+        const title = document.getElementById('sTitle').value.trim();
+        const text = document.getElementById('sText').value.trim();
+        const status = document.getElementById('storyUploadStatus');
+
+        if(!author || !title || !text) return alert("সব তথ্য দিন!");
+        status.innerText = "⏳ জমা হচ্ছে...";
+        try {
+            await dbBase.collection('channel_stories').add({
+                channel: currentChannel,
+                author: author,
+                title: title,
+                text: text,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            status.innerText = "✅ গল্প সফলভাবে জমা হয়েছে!";
+            document.getElementById('sAuthor').value = "";
+            document.getElementById('sTitle').value = "";
+            document.getElementById('sText').value = "";
+            setTimeout(()=> status.innerText="", 3000);
+        } catch(e) { status.innerText = "❌ জমা ব্যর্থ হয়েছে!"; status.style.color="red";}
+    }
+
+    // ADMIN: Load Folders
+    function loadAdminFolders() {
+        const pId = document.getElementById('aProjectSelect').value;
+        const container = document.getElementById('adminFolderContainer');
+        if(!pId) { container.style.display = "none"; return; }
+        
+        container.style.display = "grid";
+        const folders = [
+            { id: "Voice", name: "ভয়েস", icon: "fas fa-microphone" },
+            { id: "Scripting", name: "স্ক্রিপ্টিং", icon: "fas fa-pen-nib" },
+            { id: "Editing", name: "এডিটিং", icon: "fas fa-cut" },
+            { id: "Casting", name: "কাস্টিং", icon: "fas fa-users" },
+            { id: "Other", name: "অন্যান্য", icon: "fas fa-folder" }
+        ];
+
+        let html = "";
+        folders.forEach(f => {
+            html += `
+                <div class="folder-card" onclick="openFolder('${pId}', '${f.id}', '${f.name}')">
+                    <div class="folder-icon"><i class="${f.icon}"></i></div>
+                    <div class="folder-name">${f.name}</div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    // ADMIN: Open Folder
+    function openFolder(projectId, folderId, folderName) {
+        const filtered = allTasksCache.filter(t => t.channel === currentChannel && t.projectId === projectId && t.folder === folderId);
+        
+        let html = "";
+        if(filtered.length === 0) html = "<p style='text-align:center; color:#888;'>এই ফোল্ডারে এখনো কোনো কাজ জমা পড়েনি।</p>";
+        else {
+            filtered.forEach(t => {
+                const isAudio = t.fileUrl.match(/\.(mp3|wav|ogg|webm)$/i) || t.fileUrl.includes('video/upload');
+                html += `
+                    <div class="list-card">
+                        <b>👤 ${t.submitterName}</b>
+                        <p style="margin-bottom:10px; font-size:12px;">সময়: ${t.timestamp ? new Date(t.timestamp.toMillis()).toLocaleString('bn-BD') : 'Recent'}</p>
+                        ${isAudio ? `<audio controls src="${t.fileUrl}" style="width:100%; height:40px; margin-bottom:10px;"></audio>` : ''}
+                        <a href="${t.fileUrl}" target="_blank" class="btn-home" style="position:static; display:inline-block; font-size:12px; background:var(--primary-color); color:white;">ফাইলটি ওপেন/ডাউনলোড করুন</a>
+                    </div>
+                `;
+            });
+        }
+        
+        document.getElementById('modalTitle').innerText = "📂 ফোল্ডার: " + folderName;
+        document.getElementById('modalContent').innerHTML = html;
+        document.getElementById('modalOverlay').style.display = "flex";
+    }
+
+    // ADMIN: Load Stories
+    function loadAdminStories() {
+        if(!isAuthReady) return;
+        const listDiv = document.getElementById('adminStoriesList');
+        listDiv.innerHTML = "<p>লোড হচ্ছে...</p>";
+
+        dbBase.collection('channel_stories').get().then(snap => {
+            let html = "";
+            let count = 0;
+            snap.forEach(doc => {
+                const d = doc.data();
+                if(d.channel === currentChannel) {
+                    count++;
+                    html += `
+                        <div class="list-card">
+                            <b>📖 ${d.title}</b>
+                            <p style="color:var(--primary-color); font-weight:bold;">লেখক: ${d.author}</p>
+                            <div style="background:#f9f9f9; padding:10px; margin-top:10px; border-radius:5px; max-height:150px; overflow-y:auto; white-space:pre-wrap; font-size:14px;">${d.text}</div>
+                        </div>
+                    `;
+                }
+            });
+            if(count === 0) listDiv.innerHTML = "<p style='color:#888; text-align:center;'>কোনো গল্প পাওয়া যায়নি।</p>";
+            else listDiv.innerHTML = html;
+        }).catch(err => console.error(err));
+    }
+
+    function closeModal() { document.getElementById('modalOverlay').style.display = "none"; }
+</script>
+</body>
+</html>
